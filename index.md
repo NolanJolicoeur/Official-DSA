@@ -26,7 +26,7 @@ Syntax highlighted code block
 
 
 ```
-###Test 1 - Do Fantasy Points Relate to Wins?
+### Test 1 - Do Fantasy Points Relate to Wins?
 ```Markdown
 * For this first test I summed the total fantasy points scored by each team throughout the season. 
 ![image2](![image2](https://user-images.githubusercontent.com/89327000/144916715-9307e68f-7dba-4655-ba24-22f017b1f426.png)
