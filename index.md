@@ -17,7 +17,7 @@ Markdown is a lightweight and easy-to-use syntax for styling your writing. It in
   - Rushing: 
     -Touchdown = 6 points 
     -1 Yard = 0.1 points
-   -Recieving: 
+  - Recieving: 
     -Touchdown = 6 points 
     -1 Yard = 0.1 points 
     -Catch = 1 point
