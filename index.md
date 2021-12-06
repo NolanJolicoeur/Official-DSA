@@ -8,10 +8,22 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
+```Fantasy Football Overview
 Syntax highlighted code block
 
-**Test 1**
+- Fantasy Football is a game in which people face off head to head with fictional teams they created. 
+- These teams are made up of real NFL athletes and the scoring system is based off actual NFL stats. 
+  - Passing: 
+    -Touchdown = 4 points
+    -1 Yard = 0.04 points
+  - Rushing: 
+    -Touchdown = 6 points 
+    -1 Yard = 0.1 points
+   -Recieving: 
+    -Touchdown = 6 points 
+    -1 Yard = 0.1 points 
+    -Catch = 1 point
+
 ## Header 2
 ### Header 3
 
