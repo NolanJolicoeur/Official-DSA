@@ -6,7 +6,6 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 
 ### Fantasy Football Overview
 ```Markdown
-Syntax highlighted code block
 
 * Fantasy Football is a game in which people face off head to head with fictional teams they created. 
 * These teams are made up of real NFL athletes and the scoring system is based off actual NFL stats. 
