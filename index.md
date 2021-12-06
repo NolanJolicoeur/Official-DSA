@@ -37,7 +37,7 @@ Syntax highlighted code block
 [Link](url) and ![Image](src)
 ```
 
-```Markdown
+```{r}
 df <- read.csv("~/Downloads/nfl_pass_rush_receive_raw_data (1).csv")
 View(df)
 ```
