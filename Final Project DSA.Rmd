@@ -1,0 +1,479 @@
+---
+title: "Final Project DSA"
+output: html_document
+---
+
+```{r}
+#Data is through November 29, 2021
+df <- read.csv("~/Downloads/nfl_pass_rush_receive_raw_data (1).csv")
+View(df)
+#This data frame contains data from the start of 2019 to the current day in the NFL
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(sqldf)
+library(RSQLite)
+library(devtools)
+library(ggpubr)
+```
+
+
+```{r}
+team = c("ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GNB", "HOU", "IND", "JAX", "KAN", "LVR", "LAC", "LAR", "MIA", "MIN", "NWE", "NOR", "NYG", "NYJ", "PHI", "PIT", "SFO", "SEA", "TAM", "TEN", "WAS")
+wins = c(9,5,8,7,5,4,7,6,7,6,0,9,2,6,2,7,6,6,7,5,5,8,5,4,3,5,5,6,3,8,8,5)
+losses = c(2,6,3,4,7,7,4,6,4,5,10,3,9,6,9,4,5,5,4,7,6,4,6,7,8,7,5,5,8,3,4,6)
+ties = c(0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0)
+points_for = c(310,199,263,326,236,179,309,254,326,228,174,283,164,340,173,281,259,273,299,234,281,336,257,202,199,304,224,280,209,347,304,229)
+points_against = c(202,302,240,182,253,254,226,267,250,196,289,242,292,283,283,250,295,293,263,279,276,190,249,253,334,273,267,248,226,253,290,282)
+team_records = data.frame(team, wins, losses, ties, points_for, points_against)
+View(team_records)
+
+Combined_Team_Stats = sqldf("select team_records.team, team_records.wins, team_records.losses, ties, team_records.points_for, team_records.points_against, Fantasy_PTS_By_Team.Total_DKP
+                           from team_records
+                           left join Fantasy_PTS_By_Team on team_records.team = Fantasy_PTS_By_Team.team")
+```
+
+```{r}
+
+Fantasy_PTS_By_Team = sqldf("select team, sum(Total_DKP)
+                            from df 
+                            group by team")
+Fantasy_PTS_By_Team = rename(Fantasy_PTS_By_Team, 'Total_DKP' = 'sum(Total_DKP)')
+Combined_Team_Stats = sqldf("select team_records.team, team_records.wins, team_records.losses, ties, team_records.points_for, team_records.points_against, Fantasy_PTS_By_Team.Total_DKP
+                           from team_records
+                           left join Fantasy_PTS_By_Team on team_records.team = Fantasy_PTS_By_Team.team")
+
+```
+
+```{r}
+
+Points_Per_Win <- ggplot(Combined_Team_Stats, aes(x = Total_DKP, y = Wins))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Fantasy Points and Wins", x = "Fantasy Points", y = "Wins")+
+  geom_point()
+Points_Per_Win
+
+# Adjusted R-Squared = 0.5849, Multiple R-Squared = 0.5983, P-Value = 2.092e^-7
+Model_Points_Per_Win = lm(Wins~Total_DKP, Combined_Team_Stats)
+summary(Model_Points_Per_Win)
+
+Fantasy_PTS_Per_Actual_Point <- ggplot(Combined_Team_Stats, aes(x = Total_DKP, y = Points_For))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Fantasy Points and Points For", x = "Fantasy Points", y = "Points For")+
+  geom_point()
+Fantasy_PTS_Per_Actual_Point
+
+cor_wins = cor.test(Combined_Team_Stats$Total_DKP, Combined_Team_Stats$wins, method = "pearson")
+cor_wins
+
+cor_points_for = cor.test(Combined_Team_Stats$Total_DKP, Combined_Team_Stats$points_for, method = "pearson")
+cor_points_for
+
+
+```
+
+
+```{r}
+
+df1 <- sqldf("select pos, player, team, pass_cmp, pass_att, pass_yds, pass_td, pass_int, pass_sacked, pass_sacked_yds, pass_long, pass_rating, rush_att, rush_yds, rush_td, rush_long, targets, rec, rec_yds, rec_td, rec_long, fumbles_lost, rush_scrambles, designed_rush_att, comb_pass_rush_play, comb_pass_play, comb_rush_play, Team_abbrev, Opponent_abbrev, two_point_conv, total_ret_td, offensive_fumble_recovery_td, pass_yds_bonus, rush_yds_bonus, rec_yds_bonus, Total_DKP, Off_DKP
+from df
+group by player")
+
+```
+
+
+```{r}
+Total_Team_PTS <- sqldf("select pos, player, team, sum(pass_cmp), sum(pass_att), sum(pass_yds), pass_td, pass_int, pass_sacked, pass_sacked_yds, pass_long, pass_rating, rush_att, rush_yds, rush_td, rush_long, targets, rec, rec_yds, rec_td, rec_long, fumbles_lost, rush_scrambles, designed_rush_att, comb_pass_rush_play, comb_pass_play, comb_rush_play, Team_abbrev, Opponent_abbrev, two_point_conv, total_ret_td, offensive_fumble_recovery_td, pass_yds_bonus, rush_yds_bonus, rec_yds_bonus, Total_DKP, Off_DKP
+from df
+group by player")
+
+```
+
+
+```{r}
+
+QB_df1 <- sqldf("select pos, player, team, pass_cmp, pass_att, pass_yds, pass_td, pass_int, pass_sacked, pass_sacked_yds, pass_long, pass_rating, comb_pass_rush_play, rush_scrambles, comb_pass_play, comb_rush_play, pass_poor_throws, pass_blitzed, pass_hurried, Total_DKP 
+             from df
+             where pos = 'QB' and pass_att > 15")
+QB_totals = sqldf("select pos, player, team, avg(pass_cmp), avg(pass_att), avg(pass_yds), avg(pass_td), avg(pass_int), avg(pass_sacked), avg(pass_long), avg(pass_rating), avg(rush_scrambles), avg(comb_pass_play), avg(comb_rush_play), avg(pass_poor_throws), avg(pass_blitzed), avg(pass_hurried), avg(Total_DKP) 
+from QB_df1
+group by player")
+
+# pass_att must be greater than 15 because we are trying to exclude QB's who were subed into the end of a game that was a blowout.  They will be automatic outliers and will skew the data. 
+
+```
+
+```{r}
+
+QB_totals = rename(QB_totals, 'AVG_Cmp' = 'avg(pass_cmp)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Att' = 'avg(pass_att)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Yards' = 'avg(pass_yds)')
+QB_totals = rename(QB_totals, 'AVG_Pass_TD' = 'avg(pass_td)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Sacked' = 'avg(pass_sacked)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Long' = 'avg(pass_long)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Rating' = 'avg(pass_rating)')
+QB_totals = rename(QB_totals, 'AVG_INT' = 'avg(pass_int)')
+QB_totals = rename(QB_totals, 'AVG_Pass_Play' = 'avg(comb_pass_play)')
+QB_totals = rename(QB_totals, 'AVG_Rush_Play' = 'avg(comb_rush_play)')
+QB_totals = rename(QB_totals, 'AVG_Poor_Passes' = 'avg(pass_poor_throws)')
+QB_totals = rename(QB_totals, 'AVG_Blitzed' = 'avg(pass_blitzed)')
+QB_totals = rename(QB_totals, 'AVG_Hurried' = 'avg(pass_hurried)')
+QB_totals = rename(QB_totals, 'AVG_Total_DKP' = 'avg(Total_DKP)')
+```
+
+
+
+```{r}
+
+pass_cmp <- ggplot(QB_totals, aes(x = AVG_Cmp, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Pass Completions and Average Fantasy Points", x = "Average Pass Completions", y = "Average Fantasy Points")+
+  geom_point()
+pass_cmp
+
+pass_att <- ggplot(QB_totals, aes(x = AVG_Pass_Att, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Pass Attempts and Fantasy Points", x = "Average Pass Attempts", y = "Average Fantasy Points")+
+  geom_point()
+pass_att
+
+pass_yds <- ggplot(QB_totals, aes(x = AVG_Pass_Yards, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Pass Yards and Fantasy Points", x = "Average Pass Yards", y = "Average Fantasy Points")+
+  geom_point()
+pass_yds
+
+pass_td <- ggplot(QB_totals, aes(x = AVG_Pass_TD, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Pass Attempts and Fantasy Points", x = "Average Pass Attempts", y = "Average Fantasy Points")+
+  geom_point()
+pass_td
+
+pass_sacked <- ggplot(QB_totals, aes(x = AVG_Pass_Sacked, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Times Sacked and Fantasy Points", x = "Average Times Sacked", y = "Average Fantasy Points")+
+  geom_point()
+pass_sacked
+
+pass_long <- ggplot(QB_totals, aes(x = AVG_Pass_Long, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Longest Pass and Fantasy Points", x = "Average Longest Pass", y = "Average Fantasy Points")+
+  geom_point()
+pass_long
+
+pass_rating <- ggplot(QB_totals, aes(x = AVG_Pass_Rating, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Passer Rating and Fantasy Points", x = "Average Passer Rating", y = "Average Fantasy Points")+
+  geom_point()
+pass_rating
+
+comb_pass_play <- ggplot(QB_totals, aes(x = AVG_Pass_Play, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Number of Pass Plays and Fantasy Points", x = "Average Number of Pass Plays", y = "Average Fantasy Points")+
+  geom_point()
+comb_pass_play
+
+comb_rush_play <- ggplot(QB_totals, aes(x = AVG_Rush_Play, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Number of Run Plays and Fantasy Points", x = "Average Number of Run Plays", y = "Average Fantasy Points")+
+  geom_point()
+comb_rush_play
+
+poor_passes <- ggplot(QB_totals, aes(x = AVG_Poor_Passes, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Poor Passes and Fantasy Points", x = "Average Poor Passes", y = "Average Fantasy Points")+
+  geom_point()
+poor_passes
+
+pass_blitzed <- ggplot(QB_totals, aes(x = AVG_Blitzed, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Passes Blitzed and Fantasy Points", x = "Average Passes Blitzed", y = "Average Fantasy Points")+
+  geom_point()
+pass_blitzed
+
+pass_hurried <- ggplot(QB_totals, aes(x = AVG_Hurried, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Passes Hurried and Fantasy Points", x = "Average Passes Hurried", y = "Average Fantasy Points")+
+  geom_point()
+pass_hurried
+
+
+```
+
+```{r}
+cor_avg_cmp = cor.test(QB_totals$AVG_Cmp, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_cmp
+
+cor_avg_pass_att = cor.test(QB_totals$AVG_Pass_Att, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_att
+
+cor_avg_pass_yds = cor.test(QB_totals$AVG_Pass_Yards, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_yds
+
+cor_avg_pass_td = cor.test(QB_totals$AVG_Pass_TD, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_td
+
+cor_avg_pass_sacked = cor.test(QB_totals$AVG_Pass_Sacked, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_sacked
+
+cor_avg_pass_long = cor.test(QB_totals$AVG_Pass_Long, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_long
+
+cor_avg_pass_rating = cor.test(QB_totals$AVG_Pass_Rating, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_rating
+
+cor_avg_pass_int = cor.test(QB_totals$AVG_INT, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_int
+
+cor_avg_pass_play = cor.test(QB_totals$AVG_Pass_Play, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_play
+
+cor_avg_rush_play = cor.test(QB_totals$AVG_Rush_Play, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rush_play
+
+cor_avg_poor_pass = cor.test(QB_totals$AVG_Poor_Passes, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_poor_pass
+
+cor_avg_blitzed = cor.test(QB_totals$AVG_Blitzed, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_blitzed
+
+cor_avg_pass_hurried = cor.test(QB_totals$AVG_Hurried, QB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_hurried
+
+QB_table = matrix(c(cor_avg_pass_att$estimate, cor_avg_cmp$estimate, cor_avg_pass_yds$estimate, cor_avg_pass_td$estimate, cor_avg_pass_sacked$estimate, cor_avg_pass_long$estimate, cor_avg_pass_rating$estimate, cor_avg_pass_int$estimate, cor_avg_pass_play$estimate, cor_avg_rush_play$estimate, cor_avg_poor_pass$estimate, cor_avg_blitzed$estimate, cor_avg_pass_hurried$estimate), ncol = 13, byrow = TRUE)
+colnames(QB_table) = c("Average Attempts", "Average Completions", "Average Passing Yards", "Average Passing Touchdowns", "Average Times Sacked", "Average Longest Pass", "Average Passer Rating", "Average Interceptions", "Average Passing Plays", "Average Rushing Plays", "Average Poor Passes", "Average Times Blitzed", "Average Passes Hurried")
+rownames(QB_table) = c("Correlation")
+
+QB_table = as.table(QB_table)
+View(QB_table)
+```
+
+
+```{r}
+
+RB_df1 = sqldf("select pos, player, team, rush_att, rush_yds, rush_td, rush_long, targets, rec, rec_yds, rec_td, rec_long, fumbles_lost, designed_rush_att, rush_yds_before_contact, rush_yac, Total_DKP
+          from df 
+          where pos = 'RB'")
+RB_totals = sqldf("select pos, player, team, avg(rush_att), avg(rush_yds), avg(rush_td), avg(rush_long), avg(targets), avg(rec), avg(rec_yds), avg(rec_td), avg(rec_long), avg(fumbles_lost), avg(designed_rush_att), avg(rush_yds_before_contact), avg(rush_yac), avg(Total_DKP)
+                  from RB_df1
+                  where rush_att > 5
+                  group by player")
+
+View(RB_totals)
+```
+
+```{r}
+
+RB_totals = rename(RB_totals, 'AVG_Total_DKP' = 'avg(Total_DKP)')
+RB_totals = rename(RB_totals, 'AVG_Rush_Att' = 'avg(rush_att)')
+RB_totals = rename(RB_totals, 'AVG_Rush_Yds' = 'avg(rush_yds)')
+RB_totals = rename(RB_totals, 'AVG_Rush_TD' = 'avg(rush_td)')
+RB_totals = rename(RB_totals, 'AVG_Rush_Long' = 'avg(rush_long)')
+RB_totals = rename(RB_totals, 'AVG_Targets' = 'avg(targets)')
+RB_totals = rename(RB_totals, 'AVG_Rec' = 'avg(rec)')
+RB_totals = rename(RB_totals, 'AVG_Recieving_Yards' = 'avg(rec_yds)')
+RB_totals = rename(RB_totals, 'AVG_Yds_Before_Contact' = 'avg(rush_yds_before_contact)')
+RB_totals = rename(RB_totals, 'AVG_Yds_After_Contact' = 'avg(rush_yac)')
+RB_totals = rename(RB_totals, 'AVG_Recieving_TD' = 'avg(rec_td)')
+```
+
+```{r}
+
+RB_rush_att <- ggplot(RB_totals, aes(x = AVG_Rush_Att, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Rushing Attempts and Fantasy Points", x = "Average Rushing Attempts", y = "Average Fantasy Points")+
+  geom_point()
+RB_rush_att
+
+RB_rush_yds <- ggplot(RB_totals, aes(x = AVG_Rush_Yds, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Rushing Yards and Fantasy Points", x = "Average Rushing Yards", y = "Average Fantasy Points")+
+  geom_point()
+RB_rush_yds
+
+RB_rush_td <- ggplot(RB_totals, aes(x = AVG_Rush_TD, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Rushing Touchdowns and Fantasy Points", x = "Average Rushing Touchdowns", y = "Average Fantasy Points")+
+  geom_point()
+RB_rush_td
+
+RB_rush_long <- ggplot(RB_totals, aes(x = AVG_Rush_Long, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Longest Run and Fantasy Points", x = "Average Longest Run", y = "Average Fantasy Points")+
+  geom_point()
+RB_rush_long
+
+RB_targets <- ggplot(RB_totals, aes(x = AVG_Targets, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Targets and Fantasy Points", x = "Average Targets", y = "Average Fantasy Points")+
+  geom_point()
+RB_targets
+
+RB_rec <- ggplot(RB_totals, aes(x = AVG_Rec, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Receptions and Fantasy Points", x = "Average Receptions", y = "Average Fantasy Points")+
+  geom_point()
+RB_rec
+
+RB_recieving_yds <- ggplot(RB_totals, aes(x = AVG_Recieving_Yards, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Recieving Yards and Fantasy Points", x = "Average Recieving Yards", y = "Average Fantasy Points")+
+  geom_point()
+RB_recieving_yds
+
+RB_recieving_td <- ggplot(RB_totals, aes(x = AVG_Recieving_TD, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Recieving Touchdowns and Fantasy Points", x = "Average Recieving Touchdowns", y = "Average Fantasy Points")+
+  geom_point()
+RB_recieving_td
+
+RB_yds_before_contact <- ggplot(RB_totals, aes(x = AVG_Yds_Before_Contact, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Yards Before Contact and Fantasy Points", x = "Average Yards Before Contact", y = "Average Fantasy Points")+
+  geom_point()
+RB_yds_before_contact
+
+RB_yac <- ggplot(RB_totals, aes(x = AVG_Yds_After_Contact, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Yards After Contact and Fantasy Points", x = "Average Yards After Contact", y = "Average Fantasy Points")+
+  geom_point()
+RB_yac
+```
+
+```{r}
+
+cor_avg_rush_att = cor.test(RB_totals$AVG_Rush_Att, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rush_att
+
+cor_avg_rush_yds = cor.test(RB_totals$AVG_Rush_Yds, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rush_yds
+
+cor_avg_rush_td = cor.test(RB_totals$AVG_Rush_TD, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rush_td
+
+cor_avg_rush_long = cor.test(RB_totals$AVG_Rush_Long, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rush_long
+
+cor_avg_rb_targets = cor.test(RB_totals$AVG_Targets, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_targets
+
+cor_avg_rb_rec = cor.test(RB_totals$AVG_Rec, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_rec
+
+cor_avg_rb_rec_yds = cor.test(RB_totals$AVG_Recieving_Yards, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_rec_yds
+
+cor_avg_rb_rec_td = cor.test(RB_totals$AVG_Recieving_TD, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_rec_td
+
+cor_avg_rb_yds_before_contact = cor.test(RB_totals$AVG_Yds_Before_Contact, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_yds_before_contact
+
+cor_avg_rb_yds_after_contact = cor.test(RB_totals$AVG_Yds_After_Contact, RB_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rb_yds_after_contact
+
+RB_table = matrix(c(cor_avg_rush_att$estimate, cor_avg_rush_yds$estimate, cor_avg_rush_td$estimate, cor_avg_rush_long$estimate, cor_avg_rb_targets$estimate, cor_avg_rb_rec$estimate, cor_avg_rb_rec_yds$estimate, cor_avg_rb_rec_td$estimate, cor_avg_rb_yds_before_contact$estimate, cor_avg_rb_yds_after_contact$estimate), ncol = 10, byrow = TRUE)
+colnames(RB_table) = c("Average Attempts", "Average Rushing Yards", "Average Rushing Touchdowns", "Average Longest Run", "Average Passing Targets", "Average Receptions", "Average Recieving Yards", "Average Recieving Touchdowns", "Average Yards Before Contact", "Average Yards After Contact")
+rownames(RB_table) = c("Correlation")
+
+RB_table = as.table(RB_table)
+View(RB_table)
+```
+
+
+
+```{r}
+
+WR_TE_df1 = sqldf("select pos, player, team, targets, rec, rec_yds, rec_td, rec_long, fumbles_lost, designed_rush_att, comb_pass_rush_play, comb_pass_play, Total_DKP
+               from df
+               where pos = 'WR' or pos = 'TE'")
+WR_TE_totals = sqldf("select pos, player, team, avg(targets), avg(rec), avg(rec_yds), avg(rec_td), avg(rec_long), avg(fumbles_lost), avg(designed_rush_att), avg(comb_pass_rush_play), avg(comb_pass_play), avg(Total_DKP)
+                     from WR_TE_df1
+                     where targets > 2
+                     group by player")
+View(WR_TE_totals)
+               
+```
+
+```{r}
+
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Total_DKP' = 'avg(Total_DKP)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Targets' = 'avg(targets)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Rec' = 'avg(rec)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Rec_Yds' = 'avg(rec_yds)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Rec_TD' = 'avg(rec_td)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Rec_Long' = 'avg(rec_long)')
+WR_TE_totals = rename(WR_TE_totals, 'AVG_Rec_Passing_Rushing_Plays' = 'avg(comb_pass_rush_play)')
+```
+
+
+```{r}
+
+WR_TE_targets <- ggplot(WR_TE_totals, aes(x = AVG_Targets, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Targets and Fantasy Points", x = "Average Targets", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_targets
+
+WR_TE_rec <- ggplot(WR_TE_totals, aes(x = AVG_Rec, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Receptions and Fantasy Points", x = "Average Rec", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_rec
+
+WR_TE_rec_yds <- ggplot(WR_TE_totals, aes(x = AVG_Rec_Yds, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Recieving Yards and Fantasy Points", x = "Average Recieving Yards", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_rec_yds
+
+WR_TE_rec_td <- ggplot(WR_TE_totals, aes(x = AVG_Rec_TD, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Recieving Touchdowns and Fantasy Points", x = "Average Recieving Touchdowns", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_rec_td
+
+WR_TE_rec_long <- ggplot(WR_TE_totals, aes(x = AVG_Rec_Long, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Longest Catch and Fantasy Points", x = "Average Longest Catch", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_rec_long
+
+WR_TE_passing_rushing_plays <- ggplot(WR_TE_totals, aes(x = AVG_Rec_Passing_Rushing_Plays, y = AVG_Total_DKP))+
+  geom_smooth(method = "lm", se = TRUE)+
+  labs(title = "Relationship Between Average Passing and Running Plays and Fantasy Points", x = "Average Passing and Running Plays", y = "Average Fantasy Points")+
+  geom_point()
+WR_TE_passing_rushing_plays
+View(WR_TE_totals)
+```
+
+```{r}
+
+cor_avg_targets = cor.test(WR_TE_totals$AVG_Targets, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_targets
+
+cor_avg_rec = cor.test(WR_TE_totals$AVG_Rec, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rec
+
+cor_avg_rec_yds = cor.test(WR_TE_totals$AVG_Rec_Yds, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rec_yds
+
+cor_avg_td = cor.test(WR_TE_totals$AVG_Rec_TD, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_td
+
+cor_avg_rec_long = cor.test(WR_TE_totals$AVG_Rec_Long, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_rec_long
+
+cor_avg_pass_rush_plays = cor.test(WR_TE_totals$AVG_Rec_Passing_Rushing_Plays, WR_TE_totals$AVG_Total_DKP, method = "pearson")
+cor_avg_pass_rush_plays
+
+WR_TE_table = matrix(c(cor_avg_targets$estimate, cor_avg_rec$estimate, cor_avg_rec_yds$estimate, cor_avg_td$estimate, cor_avg_rec_long$estimate, cor_avg_pass_rush_plays$estimate), ncol = 6, byrow = TRUE)
+colnames(WR_TE_table) = c("Average Targets", "Average Receptions", "Average Recieving Yards", "Averager Recieving Touchdowns", "Average Longest Catch", "Average Run and Pass Plays")
+rownames(WR_TE_table) = c("Correlation")
+
+WR_TE_table = as.table(WR_TE_table)
+View(WR_TE_table)
+```
+
