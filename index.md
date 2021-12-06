@@ -26,10 +26,26 @@ Syntax highlighted code block
 
 
 ```
+###Test 1 - Do Fantasy Points Relate to Wins?
+```Markdown
+* For this first test I summed the total fantasy points scored by each team throughout the season. 
+![image2](![image2](https://user-images.githubusercontent.com/89327000/144916715-9307e68f-7dba-4655-ba24-22f017b1f426.png)
+* Based on this graph, there seems to be a positive relationship between fantasy points and wins. 
+* When using the Pearson correlation formula: 
+     * Correlation = 0.7735
+     * The 95 percent confidence interval is from 0.5817 to 0.8838. 
+* There definitely seems to be a correlation between the two variables. 
+* To try and find a stronger relationship, I next tested fantasy points in relation to points scored. 
+![image3](https://user-images.githubusercontent.com/89327000/144917574-e3a5b38e-7f49-439e-99cf-9d4495571302.png)
+* This graph also has a positive relationship. 
+* When using the Pearson correlation formula: 
+     * Correlation = 0.8830
+     * The 95 percent confidence interval is from 0.7720 to 0.9417. 
+* The correlation between fantasy points and points for is stronger than the correlation between fantasy points and wins. 
+* This means we can conclude that team fantasy points are a better predictor of points scored than wins. 
 
 
-
-
+```
 
 
 For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
