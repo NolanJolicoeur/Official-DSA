@@ -8,30 +8,22 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 ```Markdown
 Syntax highlighted code block
 
-- Fantasy Football is a game in which people face off head to head with fictional teams they created. 
-- These teams are made up of real NFL athletes and the scoring system is based off actual NFL stats. 
-  - Passing: 
-    - Touchdown = 4 points
-    - 1 Yard = 0.04 points
-  - Rushing: 
-    - Touchdown = 6 points 
-    - 1 Yard = 0.1 points
-  - Recieving: 
-    - Touchdown = 6 points 
-    - 1 Yard = 0.1 points 
-    - Catch = 1 point
-## Header 2
-### Header 3
+* Fantasy Football is a game in which people face off head to head with fictional teams they created. 
+* These teams are made up of real NFL athletes and the scoring system is based off actual NFL stats. 
+  * Passing: 
+    * Touchdown = 4 points
+    * Yard = 0.04 points
+  * Rushing: 
+    * Touchdown = 6 points 
+    * Yard = 0.1 points
+  * Recieving: 
+    * Touchdown = 6 points 
+    * 1 Yard = 0.1 points 
+    * Catch = 1 point
 
-- Bulleted
-- List
+![image1](https://user-images.githubusercontent.com/89327000/144916234-68213361-4e0b-4cc5-9e8b-2ffe82a776ca.png)
 
-1. Numbered
-2. List
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
 
 ```
 
