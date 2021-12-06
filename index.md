@@ -9,8 +9,6 @@ Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://j
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
 ```Markdown
-Syntax highlighted code block
-
 - Fantasy Football is a game in which people face off head to head with fictional teams they created. 
 - These teams are made up of real NFL athletes and the scoring system is based off actual NFL stats. 
   - Passing: 
@@ -23,19 +21,6 @@ Syntax highlighted code block
     -Touchdown = 6 points 
     -1 Yard = 0.1 points 
     -Catch = 1 point
-
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
 ```
 
 For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
