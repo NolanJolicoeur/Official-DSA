@@ -4,11 +4,11 @@ You can use the [editor on GitHub](https://github.com/NolanJolicoeur/Official-DS
 
 Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Fantasy Football Overview
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```Fantasy Football Overview
+```Markdown
 Syntax highlighted code block
 
 - Fantasy Football is a game in which people face off head to head with fictional teams they created. 
