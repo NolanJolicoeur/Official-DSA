@@ -25,6 +25,15 @@ Syntax highlighted code block
     - Catch = 1 point
 ```
 
+```Markdown
+df <- read.csv("~/Downloads/nfl_pass_rush_receive_raw_data (1).csv")
+View(df)
+```
+
+
+
+
+
 For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
 
 ### Jekyll Themes
