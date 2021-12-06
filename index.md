@@ -23,6 +23,18 @@ Syntax highlighted code block
     - Touchdown = 6 points 
     - 1 Yard = 0.1 points 
     - Catch = 1 point
+## Header 2
+### Header 3
+
+- Bulleted
+- List
+
+1. Numbered
+2. List
+
+**Bold** and _Italic_ and `Code` text
+
+[Link](url) and ![Image](src)
 ```
 
 ```Markdown
